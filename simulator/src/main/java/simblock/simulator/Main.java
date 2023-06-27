@@ -29,10 +29,7 @@ import static simblock.settings.SimulationConfiguration.CHURN_NODE_RATE;
 import static simblock.simulator.Network.getDegreeDistribution;
 import static simblock.simulator.Network.getRegionDistribution;
 import static simblock.simulator.Network.printRegion;
-import static simblock.simulator.Simulator.addNode;
-import static simblock.simulator.Simulator.getSimulatedNodes;
-import static simblock.simulator.Simulator.printAllPropagation;
-import static simblock.simulator.Simulator.setTargetInterval;
+import static simblock.simulator.Simulator.*;
 import static simblock.simulator.Timer.getCurrentTime;
 import static simblock.simulator.Timer.getTask;
 import static simblock.simulator.Timer.runTask;
@@ -64,6 +61,7 @@ public class Main {
    */
   public static Random random = new Random(10);
 
+  public static int degree = 20;
   /**
    * The initial simulation time.
    */
@@ -97,6 +95,7 @@ public class Main {
    */
   //TODO use logger
   public static PrintWriter STATIC_JSON_FILE;
+  public static PrintWriter OUT_CHAIN_LENGTH;
 
   static {
     try {
@@ -104,6 +103,8 @@ public class Main {
           new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./output.json")))));
       STATIC_JSON_FILE = new PrintWriter(
           new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./static.json")))));
+      OUT_CHAIN_LENGTH = new PrintWriter(
+              new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./chainlength.json")))));
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -122,11 +123,13 @@ public class Main {
     OUT_JSON_FILE.print("[");
     OUT_JSON_FILE.flush();
 
+    OUT_CHAIN_LENGTH.print("[");
+
     // Log regions
     printRegion();
 
     // Setup network
-    constructNetworkWithAllNodes(NUM_OF_NODES);
+    constructNetworkWithAllNodes(300);
 
     // Initial block height, we stop at END_BLOCK_HEIGHT
     int currentBlockHeight = 1;
@@ -137,14 +140,21 @@ public class Main {
         AbstractMintingTask task = (AbstractMintingTask) getTask();
         if (task.getParent().getHeight() == currentBlockHeight) {
           currentBlockHeight++;
+          // Add a new node
+          Node new_node = getNewNode(getSimulatedNodes().size(), degree);
+          addNodeWithBestConnection(new_node,
+                  degree);
         }
         if (currentBlockHeight > END_BLOCK_HEIGHT) {
           break;
         }
         // Log every 100 blocks and at the second block
         // TODO use constants here
-        if (currentBlockHeight % 100 == 0 || currentBlockHeight == 2) {
-          writeGraph(currentBlockHeight);
+        if (currentBlockHeight % 10 == 0 || currentBlockHeight == 2) {
+          if (currentBlockHeight % 100 == 0) {
+            writeGraph(currentBlockHeight);
+          }
+          writeChainLength(currentBlockHeight);
         }
       }
       // Execute task
@@ -233,6 +243,9 @@ public class Main {
     OUT_JSON_FILE.print("]");
     OUT_JSON_FILE.close();
 
+    //end json format for the chain length logging
+    OUT_CHAIN_LENGTH.print("]");
+    OUT_CHAIN_LENGTH.close();
 
     long end = System.currentTimeMillis();
     simulationTime += end - start;
@@ -241,6 +254,43 @@ public class Main {
 
   }
 
+  /**
+   * Log the chain length
+   *
+   * @param chain_length the chain length to be logged
+   */
+  public static void writeChainLength(int chain_length) {
+    OUT_CHAIN_LENGTH.print("{\"time\":" + getCurrentTime() + ",\"chainlength\":" + chain_length);
+    OUT_CHAIN_LENGTH.print("}");
+
+  }
+
+  /**
+   * Generate a new node to add
+   *
+   * @param NodeID      the ID of the new node to add
+   * @param degree      the degree of the new node
+   * @return Node
+   */
+  public static Node getNewNode(int newID, int degree){
+    // Random distribution of nodes per region
+    double[] regionDistribution = getRegionDistribution();
+    List<Integer> regionList = makeRandomListFollowDistribution(regionDistribution, false);
+
+    // Random distribution of node degrees
+    double[] degreeDistribution = getDegreeDistribution();
+    List<Integer> degreeList = makeRandomListFollowDistribution(degreeDistribution, true);
+
+    // List of nodes using compact block relay.
+    List<Boolean> useCBRNodes = makeRandomList(CBR_USAGE_RATE);
+
+    // List of churn nodes.
+    List<Boolean> churnNodes = makeRandomList(CHURN_NODE_RATE);
+
+    return new Node(
+            newID, degree, regionList.get(newID - 1), genMiningPower(), TABLE,
+            ALGO, useCBRNodes.get(newID - 1), churnNodes.get(newID - 1));
+  }
 
   //TODO　以下の初期生成はシナリオを読み込むようにする予定
   //ノードを参加させるタスクを作る(ノードの参加と，リンクの貼り始めるタスクは分ける)
@@ -336,7 +386,7 @@ public class Main {
     List<Boolean> useCBRNodes = makeRandomList(CBR_USAGE_RATE);
 
     // List of churn nodes.
-		List<Boolean> churnNodes = makeRandomList(CHURN_NODE_RATE);
+    List<Boolean> churnNodes = makeRandomList(CHURN_NODE_RATE);
 
     for (int id = 1; id <= numNodes; id++) {
       // Each node gets assigned a region, its degree, mining power, routing table and

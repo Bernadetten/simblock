@@ -1,0 +1,7 @@
+# Comma separated assignment expressions enclosed in parenthesis.
+for (($i = 0); $i -lt 300; $i++)
+{
+    gradle :simulator:run
+    Rename-Item -Path "chainlength.json" -NewName "chainlengthrand$1.txt"
+}
+

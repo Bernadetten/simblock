@@ -1,3 +1,7 @@
+The simulator SimBlock has been altered in this version to allow for a specific scenario of my research project. I was interested in the robustness of the network (measured in chain length and its stability) when using the degree of nodes in the network to add new peers compared to a completely random set of initial neighbors. For more information, mail me at bernadet.klein.wassink@gmail.com
+ 
+
+-- ORIGINAL README --
 ## What is SimBlock?
 
 SimBlock is an open source blockchain network simulator, developed by Distributed Systems Group, Tokyo Institute of Technology.

@@ -289,6 +289,7 @@ public class Node {
       removeTask(this.mintingTask);
       this.mintingTask = null;
     }
+
     // Update the current block
     this.block = newBlock;
     printAddBlock(newBlock);

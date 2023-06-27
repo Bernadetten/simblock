@@ -21,6 +21,7 @@ import static simblock.simulator.Timer.getCurrentTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 import simblock.block.Block;
 import simblock.node.Node;
 
@@ -74,7 +75,11 @@ public class Simulator {
    * @param node the node
    */
   public static void addNode(Node node) {
-    simulatedNodes.add(node);
+//    if(time < ) {
+      simulatedNodes.add(node);
+//    } else {
+//      addNodeWithRandomConnection(node, 20);
+//    }
   }
 
   /**
@@ -102,6 +107,69 @@ public class Simulator {
       existingNode.addNeighbor(node);
     }
   }
+
+  // Add the node to the lowest degree other nodes.
+  public static void addNodeWithBestConnection(Node node, int no_conn) {
+    if (no_conn >= simulatedNodes.size() - 1){
+      addNodeWithConnection(node);
+    }
+
+    node.joinNetwork();
+    addNode(node);
+
+    int[] NodeIDs = new int[no_conn];
+
+    for (int i = 0; i < no_conn; i++) {
+      int current_deg = simulatedNodes.size();
+      int current_node = 0;
+      for (int j = 0; j < simulatedNodes.size(); j++) {
+           if(simulatedNodes.get(j).getNeighbors().size() < current_deg){
+                boolean new_node = true;
+                for( int index : NodeIDs ){
+                  if (j == index) {
+                    new_node = false;
+                  }
+                }
+                if (new_node) {
+                  current_node = j;
+                }
+           }
+      }
+      NodeIDs[i] = current_node;
+      simulatedNodes.get(current_node).addNeighbor(node);
+    }
+
+  }
+
+  public static void addNodeWithRandomConnection(Node node, int no_conn) {
+    if (no_conn >= simulatedNodes.size() - 1){
+      addNodeWithConnection(node);
+    }
+
+    Random rand = new Random();
+    node.joinNetwork();
+    addNode(node);
+
+    int[] NodeIDs = new int[no_conn];
+
+    for (int i = 0; i < no_conn; i++) {
+      int int_random = rand.nextInt(simulatedNodes.size());
+
+      boolean new_node = true;
+      for( int index : NodeIDs ){
+        if (int_random == index) {
+            new_node = false;
+        }
+      }
+
+      if (new_node) {
+        NodeIDs[i] = int_random;
+        simulatedNodes.get(int_random).addNeighbor(node);
+      }
+    }
+
+  }
+
 
   /**
    * A list of observed {@link Block} instances.
