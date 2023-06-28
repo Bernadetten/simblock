@@ -100,11 +100,11 @@ public class Main {
   static {
     try {
       OUT_JSON_FILE = new PrintWriter(
-          new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./output.json")))));
+          new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./graph/output.json")))));
       STATIC_JSON_FILE = new PrintWriter(
-          new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./static.json")))));
+          new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./graph/static.json")))));
       OUT_CHAIN_LENGTH = new PrintWriter(
-              new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./chainlength.json")))));
+              new BufferedWriter(new FileWriter(new File(OUT_FILE_URI.resolve("./graph/chainlength.json")))));
     } catch (IOException e) {
       e.printStackTrace();
     }
